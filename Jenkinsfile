@@ -19,7 +19,7 @@ node {
     }
 
    stage("Deploy Prod") {
-    withEnv(["PROD_HOST=172.25.46.154"]) {
+    withEnv(["PROD_HOST=172.17.240.38"]) {
         // Ganti 'ssh-prod' dengan ID kredensial Anda (tadi Anda sebut 'kholzt')
         sshagent(credentials: ['ssh-prod']) { 
             sh '''
