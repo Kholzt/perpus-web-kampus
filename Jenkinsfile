@@ -20,7 +20,7 @@ node {
 
    stage("Deploy Prod") {
     withEnv(["PROD_HOST=172.17.240.38"]) {
-        sshagent(credentials: ['kholzt']) {
+        sshagent(credentials: ['ssh-prod']) {
             sh '''
                 # Install rsync jika belum ada
                 if ! command -v rsync > /dev/null; then
