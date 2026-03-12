@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // node {
 //     checkout scm
 //     stage("Build"){
@@ -24,14 +23,8 @@
 // }
 
 
-=======
->>>>>>> 00156f3b720550c4ee514acc1d7d96c1bd4f9d75
 node {
-<<<<<<< HEAD
     def PROD_HOST = "172.17.240.1"
-=======
-    def PROD_HOST = "127.0.0.1"
->>>>>>> 00156f3b720550c4ee514acc1d7d96c1bd4f9d75
     def PROD_USER = "kholzt"
     def PROD_PATH = "/home/kholzt/prod.kelasdevops.xyz"
 
