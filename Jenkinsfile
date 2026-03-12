@@ -33,7 +33,7 @@ node {
                 chmod 644 ~/.ssh/known_hosts
 
                 # Eksekusi rsync
-                rsync -rav --delete ./ alexr@$PROD_HOST:/home/alexr/prod.kelasdevops.xyz/ \
+                rsync -rav --delete ./ kholzt@$PROD_HOST:/home/kholzt/prod.kelasdevops.xyz/ \
                 --exclude=.env \
                 --exclude=storage \
                 --exclude=.git
