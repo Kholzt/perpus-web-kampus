@@ -28,26 +28,24 @@ node {
         }
     }
 
-    stage('Deploy') {
-        docker.image('agung3wi/alpine-rsync:1.1').inside('--entrypoint="" -u root') {
-            sshagent(credentials: ['ssh-prod']) {
-                sh '''
-                mkdir -p ~/.ssh
-                ssh-keyscan -H $PROD_HOST >> ~/.ssh/known_hosts
-
-                # Hapus cache lama supaya rsync tidak gagal
-                ssh kholzt@$PROD_HOST "rm -f /home/kholzt/prod.kelasdevops.xyz/bootstrap/cache/packages.php /home/newbieflank/prod.kelasdevops.xyz/bootstrap/cache/services.php"
-
-                # Jalankan rsync
-                rsync -rav --delete ./ \
-                    kholzt@$PROD_HOST:/home/kholzt/prod.kelasdevops.xyz/ \
-                    --exclude='public/build' \
-                    --exclude='node_modules' \
-                    --exclude='vendor' \
-                    --exclude='storage' \
-                    --exclude='.git' \
-                    --exclude='.env'
-                '''
+    stage("Deploy"){
+        // Gunakan --network host agar container bisa menembus firewall WSL
+        docker.image('agung3wi/alpine-rsync:1.1').inside('--network host -u root') {
+            withEnv(['PROD_HOST=172.17.240.38']) {
+                sshagent (credentials: ['ssh-prod']) {
+                    sh '''
+                        apk add --no-cache openssh-client || true
+                        mkdir -p ~/.ssh
+                        chmod 700 ~/.ssh
+                        
+                        # Ambil fingerprint terbaru
+                        ssh-keyscan -H "$PROD_HOST" > ~/.ssh/known_hosts
+                        
+                        # Rsync dengan user kholzt
+                        rsync -rav --delete ./ kholzt@$PROD_HOST:/home/kholzt/prod.kelasdevops.xyz/ \
+                        --exclude=.env --exclude=storage --exclude=.git
+                    '''
+                }
             }
         }
     }
