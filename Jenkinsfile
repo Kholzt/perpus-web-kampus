@@ -15,15 +15,17 @@ node {
  }
  }
  // deploy env prod
- stage("Deploy"){
- docker.image('agung3wi/alpine-rsync:1.1').inside('-u root') {
- withEnv(['PROD_HOST=172.17.240.38']) {
- sshagent (credentials: ['ssh-prod']) {
- sh 'mkdir -p ~/.ssh'
- sh 'ssh-keyscan -H "$PROD_HOST" >> ~/.ssh/known_hosts'
- sh "rsync -rav --delete ./ kholzt@$PROD_HOST:/home/kholzt/prod.kelasdevops.xyz/ --exclude=.env --exclude=storage --exclude=.git"
- }
- }
- }
- }
+stage("Deploy"){
+    // Tambahkan --network host di sini
+    docker.image('agung3wi/alpine-rsync:1.1').inside('--network host -u root') {
+        withEnv(['PROD_HOST=172.17.240.38']) {
+            sshagent (credentials: ['ssh-prod']) {
+                sh 'mkdir -p ~/.ssh'
+                // Kita gunakan ssh-keyscan untuk tes koneksi sekaligus
+                sh 'ssh-keyscan -H "$PROD_HOST" >> ~/.ssh/known_hosts'
+                sh "rsync -rav --delete ./ kholzt@$PROD_HOST:/home/kholzt/prod.kelasdevops.xyz/ --exclude=.env --exclude=storage --exclude=.git"
+            }
+        }
+    }
+}
 }
