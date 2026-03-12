@@ -1,30 +1,5 @@
-// node {
-//     checkout scm
-//     stage("Build"){
-//         docker.image('composer:2.6').inside('-u root') {
-//             sh 'rm -f composer.lock'
-//             sh 'composer install'
-//         }
-//     }
-//     stage("Testing"){
-//         docker.image('ubuntu').inside('-u root') {
-//             sh 'echo "Ini adalah test"'
-//         }
-//     }
-//     stage("Deploy"){
-//     sshagent(['ssh-prod']) {
-//         sh '''
-//             ssh -o StrictHostKeyChecking=no -p 22 kholzt@172.17.240.38 "
-//                 echo 'Deploy berhasil!'
-//             "
-//         '''
-//     }
-// }
-// }
-
-
 node {
-    def PROD_HOST = "172.17.240.38"
+    def PROD_HOST = "127.0.0.1"
     def PROD_USER = "kholzt"
     def PROD_PATH = "/home/kholzt/prod.kelasdevops.xyz"
 
@@ -47,24 +22,20 @@ node {
         }
     }
 
-   stage("Deploy"){
-        // Gunakan image yang sudah punya rsync + network host agar IP terlihat
+    stage("Deploy") {
         docker.image('agung3wi/alpine-rsync:1.1').inside('--network host -u root') {
             sshagent(['ssh-prod']) {
-                sh '''
-                    # Pastikan openssh client terinstall untuk ssh-keyscan
+                sh """
                     apk add --no-cache openssh-client || true
                     
                     mkdir -p ~/.ssh
                     chmod 700 ~/.ssh
                     
-                    # Scan host (gunakan 127.0.0.1 karena sudah pakai --network host)
-                    ssh-keyscan -H 172.17.240.38 > ~/.ssh/known_hosts
+                    ssh-keyscan -H ${PROD_HOST} > ~/.ssh/known_hosts
                     
-                    # Jalankan rsync ke folder yang benar (kholzt, bukan ubuntu)
-                    rsync -avz --delete ./ kholzt@172.17.240.38:/home/kholzt/prod.kelasdevops.xyz/ \
+                    rsync -avz --delete ./ ${PROD_USER}@${PROD_HOST}:${PROD_PATH}/ \
                     --exclude=.env --exclude=storage --exclude=.git
-                '''
+                """
             }
         }
     }
