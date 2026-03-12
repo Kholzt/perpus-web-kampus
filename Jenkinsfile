@@ -47,20 +47,19 @@ node {
         }
     }
 
-    stage("Deploy"){
-    sshagent(['ssh-prod']) {
-        sh """
-        mkdir -p ~/.ssh
-        ssh-keyscan -H 172.17.240.38 >> ~/.ssh/known_hosts
-
-        rsync -avz --delete \
-        --exclude='.env' \
-        --exclude='storage' \
-        --exclude='.git' \
-        ./ kholzt@172.17.240.38:/home/ubuntu/prod.kelasdevops.xyz/
-
-        ssh kholzt@172.17.240.38 "echo Deploy berhasil"
-        """
+   stage("Deploy"){
+        // Gunakan image yang punya rsync
+        docker.image('agung3wi/alpine-rsync:1.1').inside('--network host -u root') {
+            sshagent(['ssh-prod']) {
+                sh '''
+                    mkdir -p ~/.ssh
+                    ssh-keyscan -H 172.17.240.38 >> ~/.ssh/known_hosts
+                    
+                    # PERHATIKAN: User target adalah kholzt, path folder juga kholzt
+                    rsync -avz --delete ./ kholzt@172.17.240.38:/home/kholzt/prod.kelasdevops.xyz/ \
+                    --exclude=.env --exclude=storage --exclude=.git
+                '''
+            }
+        }
     }
-}
 }
