@@ -18,22 +18,25 @@ node {
         sh 'echo "Ini adalah test"'
     }
 
- stage("Deploy Prod") {
-    // Menggunakan docker untuk menjalankan rsync & ssh
+stage("Deploy Prod") {
     docker.image('instrumentisto/rsync-ssh').inside('-u root') {
         withEnv(["PROD_HOST=172.17.240.38"]) {
             sshagent(credentials: ['ssh-prod']) {
                 sh '''
-                    # Persiapan folder SSH di dalam container docker
+                    # Pastikan direktori ada
                     mkdir -p ~/.ssh
                     chmod 700 ~/.ssh
-                    
-                    # Scan host agar tidak ditanya fingerprint
-                    ssh-keyscan -H "$PROD_HOST" >> ~/.ssh/known_hosts
-                    
-                    # Jalankan rsync
-                    rsync -rav --delete ./ kholzt@$PROD_HOST:/home/kholzt/prod.kelasdevops.xyz/ \
-                    --exclude=.env --exclude=storage --exclude=.git
+
+                    # Ambil key server dan masukkan ke known_hosts
+                    # Jika gagal (timeout), tampilkan error tapi jangan hentikan agent dulu
+                    ssh-keyscan -H "$PROD_HOST" >> ~/.ssh/known_hosts || echo "Gagal melakukan scan host"
+
+                    # Cek apakah rsync bisa berjalan
+                    # Tambahkan -e "ssh -p 22" untuk memastikan rsync menggunakan SSH
+                    rsync -ravz --delete ./ kholzt@$PROD_HOST:/home/kholzt/prod.kelasdevops.xyz/ \
+                    --exclude=.env \
+                    --exclude=storage \
+                    --exclude=.git
                 '''
             }
         }
