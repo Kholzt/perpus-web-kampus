@@ -48,14 +48,20 @@ node {
     }
 
    stage("Deploy"){
-        // Gunakan image yang punya rsync
+        // Gunakan image yang sudah punya rsync + network host agar IP terlihat
         docker.image('agung3wi/alpine-rsync:1.1').inside('--network host -u root') {
             sshagent(['ssh-prod']) {
                 sh '''
-                    mkdir -p ~/.ssh
-                    ssh-keyscan -H 172.17.240.38 >> ~/.ssh/known_hosts
+                    # Pastikan openssh client terinstall untuk ssh-keyscan
+                    apk add --no-cache openssh-client || true
                     
-                    # PERHATIKAN: User target adalah kholzt, path folder juga kholzt
+                    mkdir -p ~/.ssh
+                    chmod 700 ~/.ssh
+                    
+                    # Scan host (gunakan 127.0.0.1 karena sudah pakai --network host)
+                    ssh-keyscan -H 172.17.240.38 > ~/.ssh/known_hosts
+                    
+                    # Jalankan rsync ke folder yang benar (kholzt, bukan ubuntu)
                     rsync -avz --delete ./ kholzt@172.17.240.38:/home/kholzt/prod.kelasdevops.xyz/ \
                     --exclude=.env --exclude=storage --exclude=.git
                 '''
