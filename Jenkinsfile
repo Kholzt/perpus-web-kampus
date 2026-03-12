@@ -1,5 +1,37 @@
+<<<<<<< HEAD
+// node {
+//     checkout scm
+//     stage("Build"){
+//         docker.image('composer:2.6').inside('-u root') {
+//             sh 'rm -f composer.lock'
+//             sh 'composer install'
+//         }
+//     }
+//     stage("Testing"){
+//         docker.image('ubuntu').inside('-u root') {
+//             sh 'echo "Ini adalah test"'
+//         }
+//     }
+//     stage("Deploy"){
+//     sshagent(['ssh-prod']) {
+//         sh '''
+//             ssh -o StrictHostKeyChecking=no -p 22 kholzt@172.17.240.1 "
+//                 echo 'Deploy berhasil!'
+//             "
+//         '''
+//     }
+// }
+// }
+
+
+=======
+>>>>>>> 00156f3b720550c4ee514acc1d7d96c1bd4f9d75
 node {
+<<<<<<< HEAD
+    def PROD_HOST = "172.17.240.1"
+=======
     def PROD_HOST = "127.0.0.1"
+>>>>>>> 00156f3b720550c4ee514acc1d7d96c1bd4f9d75
     def PROD_USER = "kholzt"
     def PROD_PATH = "/home/kholzt/prod.kelasdevops.xyz"
 
@@ -28,12 +60,14 @@ node {
                 sh """
                     apk add --no-cache openssh-client || true
                     
-                    mkdir -p ~/.ssh
-                    chmod 700 ~/.ssh
+                    // mkdir -p ~/.ssh
+                    // chmod 700 ~/.ssh
                     
-                    ssh-keyscan -H ${PROD_HOST} > ~/.ssh/known_hosts
+                    # Scan host (gunakan 127.0.0.1 karena sudah pakai --network host)
+                    ssh-keyscan -H 172.17.240.1 > ~/.ssh/known_hosts
                     
-                    rsync -avz --delete ./ ${PROD_USER}@${PROD_HOST}:${PROD_PATH}/ \
+                    # Jalankan rsync ke folder yang benar (kholzt, bukan ubuntu)
+                    rsync -avz --delete ./ kholzt@172.17.240.1:/home/kholzt/prod.kelasdevops.xyz/ \
                     --exclude=.env --exclude=storage --exclude=.git
                 """
             }
