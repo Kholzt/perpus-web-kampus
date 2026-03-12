@@ -47,22 +47,20 @@ node {
         }
     }
 
-    stage("Deploy") {
-        docker.image('agung3wi/alpine-rsync:1.1').inside('-u root') {
-            sshagent (credentials: ['ssh-prod']) {
-                sh """
-                mkdir -p ~/.ssh
-                ssh-keyscan -H ${PROD_HOST} >> ~/.ssh/known_hosts
+    stage("Deploy"){
+    sshagent(['ssh-prod']) {
+        sh """
+        mkdir -p ~/.ssh
+        ssh-keyscan -H 172.17.240.38 >> ~/.ssh/known_hosts
 
-                rsync -avz --delete \
-                --exclude='.env' \
-                --exclude='storage' \
-                --exclude='.git' \
-                ./ ${PROD_USER}@${PROD_HOST}:${PROD_PATH}
+        rsync -avz --delete \
+        --exclude='.env' \
+        --exclude='storage' \
+        --exclude='.git' \
+        ./ kholzt@172.17.240.38:/home/ubuntu/prod.kelasdevops.xyz/
 
-                ssh ${PROD_USER}@${PROD_HOST} "echo 'Deploy berhasil ke prod.kelasdevops.xyz'"
-                """
-            }
-        }
+        ssh kholzt@172.17.240.38 "echo Deploy berhasil"
+        """
     }
+}
 }
