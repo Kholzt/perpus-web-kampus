@@ -21,31 +21,33 @@ pipeline {
             }
         }
 
-        stage("Deploy Prod") {
-            steps {
-                withEnv(["PROD_HOST=172.17.240.38"]) {
-                    sshagent(credentials: ['ssh-prod']) {
-                        sh '''
-                            apk add --no-cache rsync openssh-client
+       stage("Deploy Prod") {
+    steps {
+        withEnv(["PROD_HOST=172.17.240.38"]) {
+            sshagent(credentials: ['ssh-prod']) {
+                sh '''
+                    set -e
 
-                            mkdir -p ~/.ssh
-                            chmod 700 ~/.ssh
+                    apk add --no-cache rsync openssh-client
 
-                            ssh-keyscan -H "$PROD_HOST" >> ~/.ssh/known_hosts
-                            chmod 644 ~/.ssh/known_hosts
+                    mkdir -p ~/.ssh
+                    chmod 700 ~/.ssh
 
-                            rsync -avz --delete \
-                                -e "ssh -o StrictHostKeyChecking=no" \
-                                ./ kholzt@$PROD_HOST:/home/kholzt/prod.kelasdevops.xyz/ \
-                                --exclude=.env \
-                                --exclude=storage \
-                                --exclude=.git \
-                                --exclude=node_modules \
-                                --exclude=vendor
-                        '''
-                    }
-                }
+                    ssh-keyscan -H $PROD_HOST >> ~/.ssh/known_hosts
+
+                    rsync -avz --delete \
+                        -e "ssh -o StrictHostKeyChecking=no" \
+                        ./ kholzt@$PROD_HOST:/home/kholzt/prod.kelasdevops.xyz/ \
+                        --exclude=.env \
+                        --exclude=storage \
+                        --exclude=.git \
+                        --exclude=node_modules \
+                        --exclude=vendor
+                '''
             }
+        }
+    }
+}
         }
     }
 }
