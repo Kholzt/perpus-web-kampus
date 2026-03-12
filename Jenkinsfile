@@ -12,7 +12,7 @@ node {
         }
     }
     stage("Deploy"){
-    sshagent(['prod-server']) {
+    sshagent(['ssh-prod']) {
         sh '''
             ssh -o StrictHostKeyChecking=no -p 2222 kholzt@172.17.240.38 "
                 echo 'Deploy berhasil!'
