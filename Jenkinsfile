@@ -18,7 +18,7 @@ node {
         // --add-host memetakan 'host.docker.internal' ke IP gateway WSL kamu
         docker.image('agung3wi/alpine-rsync:1.1').inside('--add-host=host.docker.internal:host-gateway -u root') {
             // Gunakan host.docker.internal sebagai pengganti IP statis
-            withEnv(['PROD_HOST=host.docker.internal']) {
+            withEnv(['PROD_HOST=172.17.240.38']) {
                 sshagent (credentials: ['ssh-prod']) {
                     sh '''
                         mkdir -p ~/.ssh
