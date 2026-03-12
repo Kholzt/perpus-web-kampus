@@ -1,38 +1,55 @@
 node {
-    checkout scm
-    
-    stage("Build"){
-        docker.image('composer:2.7').inside('-u root') {
-            sh 'rm -f composer.lock'
-            sh 'composer install'
+
+    stage('Checkout') {
+        checkout scm
+    }
+
+    stage('Build') {
+        docker.image('php:8.2-cli').inside('--entrypoint="" -u root') {
+            sh '''
+            apt-get update
+            apt-get install -y git unzip libzip-dev curl
+
+            docker-php-ext-install zip
+
+            curl -sS https://getcomposer.org/installer | php
+            mv composer.phar /usr/local/bin/composer
+
+            composer install --ignore-platform-req=ext-gd
+            '''
         }
     }
 
-    stage("Testing"){
-        docker.image('ubuntu').inside('-u root') {
-            sh 'echo "Ini adalah test"'
+    stage('Testing') {
+        docker.image('ubuntu:22.04').inside('--entrypoint="" -u root') {
+            sh '''
+            echo "Ini adalah test"
+            '''
         }
     }
 
-    stage("Deploy"){
-        // --add-host memetakan 'host.docker.internal' ke IP gateway WSL kamu
-        docker.image('agung3wi/alpine-rsync:1.1').inside('--add-host=host.docker.internal:host-gateway -u root') {
-            // Gunakan host.docker.internal sebagai pengganti IP statis
-            withEnv(['PROD_HOST=172.17.240.38']) {
-                sshagent (credentials: ['ssh-prod']) {
-                    sh '''
-                        mkdir -p ~/.ssh
-                        chmod 700 ~/.ssh
-                        
-                        # Menghapus entri lama jika ada dan mengambil fingerprint baru
-                        ssh-keyscan -H "$PROD_HOST" > ~/.ssh/known_hosts
-                        
-                        # Jalankan rsync
-                        rsync -rav --delete ./ kholzt@$PROD_HOST:/home/kholzt/prod.kelasdevops.xyz/ \
-                        --exclude=.env --exclude=storage --exclude=.git
-                    '''
-                }
+    stage('Deploy') {
+        docker.image('agung3wi/alpine-rsync:1.1').inside('--entrypoint="" -u root') {
+            sshagent(credentials: ['ssh-prod']) {
+                sh '''
+                mkdir -p ~/.ssh
+                ssh-keyscan -H $PROD_HOST >> ~/.ssh/known_hosts
+
+                # Hapus cache lama supaya rsync tidak gagal
+                ssh newbieflank@$PROD_HOST "rm -f /home/newbieflank/prod.kelasdevops.xyz/bootstrap/cache/packages.php /home/newbieflank/prod.kelasdevops.xyz/bootstrap/cache/services.php"
+
+                # Jalankan rsync
+                rsync -rav --delete ./ \
+                    newbieflank@$PROD_HOST:/home/newbieflank/prod.kelasdevops.xyz/ \
+                    --exclude='public/build' \
+                    --exclude='node_modules' \
+                    --exclude='vendor' \
+                    --exclude='storage' \
+                    --exclude='.git' \
+                    --exclude='.env'
+                '''
             }
         }
     }
+
 }
