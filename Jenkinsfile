@@ -20,23 +20,19 @@ node {
 
    stage("Deploy Prod") {
     withEnv(["PROD_HOST=172.17.240.38"]) {
-        // Ganti 'ssh-prod' dengan ID kredensial Anda (tadi Anda sebut 'kholzt')
-        sshagent(credentials: ['ssh-prod']) { 
+        sshagent(credentials: ['kholzt']) {
             sh '''
-                # Buat folder .ssh dengan izin akses yang tepat
+                # Install rsync jika belum ada
+                if ! command -v rsync > /dev/null; then
+                    echo "Installing rsync..."
+                    apt-get update && apt-get install -y rsync
+                fi
+
                 mkdir -p ~/.ssh
-                chmod 700 ~/.ssh
-
-                # Hapus kunci lama agar tidak duplikat, lalu scan ulang
-                ssh-keygen -R "$PROD_HOST" || true
                 ssh-keyscan -H "$PROD_HOST" >> ~/.ssh/known_hosts
-                chmod 644 ~/.ssh/known_hosts
-
-                # Eksekusi rsync
+                
                 rsync -rav --delete ./ kholzt@$PROD_HOST:/home/kholzt/prod.kelasdevops.xyz/ \
-                --exclude=.env \
-                --exclude=storage \
-                --exclude=.git
+                --exclude=.env --exclude=storage --exclude=.git
             '''
         }
     }
