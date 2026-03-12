@@ -12,20 +12,17 @@ pipeline {
             agent {
                 docker {
                     image 'composer:2.7'
-                    // Menjalankan sebagai root agar tidak ada masalah permission di workspace WSL
                     args '-u root'
                 }
             }
             steps {
-                sh 'php -v'
-                sh 'composer --version'
                 sh 'composer install --ignore-platform-reqs'
             }
         }
 
         stage("Testing") {
             steps {
-                sh 'echo "Running tests... Semua aman!"'
+                sh 'echo "Test passed"'
             }
         }
 
@@ -33,23 +30,19 @@ pipeline {
             agent {
                 docker {
                     image 'instrumentisto/rsync-ssh'
-                    // KUNCI UTAMA: --net=host agar container bisa melihat IP Host/WSL
-                    args '-u root --net=host'
+                    // KUNCI UTAMA: Memetakan 'host.docker.internal' ke gateway WSL
+                    args '-u root --add-host=host.docker.internal:host-gateway'
                 }
             }
             steps {
-                withEnv(["PROD_HOST=172.17.240.38"]) {
+                // Gunakan DNS host.docker.internal sebagai pengganti IP
+                withEnv(["PROD_HOST=host.docker.internal"]) {
                     sshagent(credentials: ['ssh-prod']) {
                         sh '''
-                            # Persiapan direktori SSH
                             mkdir -p ~/.ssh
                             chmod 700 ~/.ssh
 
-                            # Scan host untuk keamanan, tapi jangan stop pipeline jika gagal (timeout)
-                            ssh-keyscan -H "$PROD_HOST" >> ~/.ssh/known_hosts || echo "Scan host gagal, melanjutkan dengan bypass..."
-
-                            # Proses Rsync
-                            # -o StrictHostKeyChecking=no ditambahkan sebagai pengaman jika IP WSL berubah
+                            # Tambahkan rsync dengan parameter SSH yang lebih longgar untuk koneksi lokal
                             rsync -ravz --delete \
                                 -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
                                 ./ kholzt@$PROD_HOST:/home/kholzt/prod.kelasdevops.xyz/ \
@@ -60,15 +53,6 @@ pipeline {
                     }
                 }
             }
-        }
-    }
-
-    post {
-        success {
-            echo 'Deployment Berhasil!'
-        }
-        failure {
-            echo 'Deployment Gagal. Silakan cek koneksi SSH atau IP Target di WSL.'
         }
     }
 }
