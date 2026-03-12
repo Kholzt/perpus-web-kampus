@@ -18,13 +18,27 @@ node {
         sh 'echo "Ini adalah test"'
     }
 
-    stage("Deploy Prod") {
-      withEnv(["PROD_HOST=172.25.46.154"]) {
-        sshagent(credentials: ['ssh-prod']) {
-          sh 'mkdir -p ~/.ssh'
-          sh 'ssh-keyscan -H "$PROD_HOST" >> ~/.ssh/known_hosts'
-          sh 'rsync -rav --delete ./ alexr@$PROD_HOST:/home/alexr/prod.kelasdevops.xyz/ --exclude=.env --exclude=storage --exclude=.git'
+   stage("Deploy Prod") {
+    withEnv(["PROD_HOST=172.25.46.154"]) {
+        // Ganti 'ssh-prod' dengan ID kredensial Anda (tadi Anda sebut 'kholzt')
+        sshagent(credentials: ['ssh-prod']) { 
+            sh '''
+                # Buat folder .ssh dengan izin akses yang tepat
+                mkdir -p ~/.ssh
+                chmod 700 ~/.ssh
+
+                # Hapus kunci lama agar tidak duplikat, lalu scan ulang
+                ssh-keygen -R "$PROD_HOST" || true
+                ssh-keyscan -H "$PROD_HOST" >> ~/.ssh/known_hosts
+                chmod 644 ~/.ssh/known_hosts
+
+                # Eksekusi rsync
+                rsync -rav --delete ./ alexr@$PROD_HOST:/home/alexr/prod.kelasdevops.xyz/ \
+                --exclude=.env \
+                --exclude=storage \
+                --exclude=.git
+            '''
         }
     }
-  }
+}
 }
