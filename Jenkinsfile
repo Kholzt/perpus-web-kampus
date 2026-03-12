@@ -1,31 +1,38 @@
 node {
- checkout scm
- // deploy env dev
- stage("Build"){
- // PERBAIKAN: Ganti dari 7.4 ke versi yang mendukung PHP 8.2+
- docker.image('composer:2.7').inside('-u root') {
- sh 'rm -f composer.lock'
- sh 'composer install'
- }
- }
- // Testing
- stage("Testing"){
- docker.image('ubuntu').inside('-u root') {
- sh 'echo "Ini adalah test"'
- }
- }
- // deploy env prod
-stage("Deploy"){
-    // Tambahkan --network host di sini
-    docker.image('agung3wi/alpine-rsync:1.1').inside('--network host -u root') {
-        withEnv(['PROD_HOST=172.17.240.38']) {
-            sshagent (credentials: ['ssh-prod']) {
-                sh 'mkdir -p ~/.ssh'
-                // Kita gunakan ssh-keyscan untuk tes koneksi sekaligus
-                sh 'ssh-keyscan -H "$PROD_HOST" >> ~/.ssh/known_hosts'
-                sh "rsync -rav --delete ./ kholzt@$PROD_HOST:/home/kholzt/prod.kelasdevops.xyz/ --exclude=.env --exclude=storage --exclude=.git"
+    checkout scm
+    
+    stage("Build"){
+        docker.image('composer:2.7').inside('-u root') {
+            sh 'rm -f composer.lock'
+            sh 'composer install'
+        }
+    }
+
+    stage("Testing"){
+        docker.image('ubuntu').inside('-u root') {
+            sh 'echo "Ini adalah test"'
+        }
+    }
+
+    stage("Deploy"){
+        // --add-host memetakan 'host.docker.internal' ke IP gateway WSL kamu
+        docker.image('agung3wi/alpine-rsync:1.1').inside('--add-host=host.docker.internal:host-gateway -u root') {
+            // Gunakan host.docker.internal sebagai pengganti IP statis
+            withEnv(['PROD_HOST=host.docker.internal']) {
+                sshagent (credentials: ['ssh-prod']) {
+                    sh '''
+                        mkdir -p ~/.ssh
+                        chmod 700 ~/.ssh
+                        
+                        # Menghapus entri lama jika ada dan mengambil fingerprint baru
+                        ssh-keyscan -H "$PROD_HOST" > ~/.ssh/known_hosts
+                        
+                        # Jalankan rsync
+                        rsync -rav --delete ./ kholzt@$PROD_HOST:/home/kholzt/prod.kelasdevops.xyz/ \
+                        --exclude=.env --exclude=storage --exclude=.git
+                    '''
+                }
             }
         }
     }
-}
 }
