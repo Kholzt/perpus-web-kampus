@@ -26,19 +26,12 @@ node {
     stage('Deploy') {
         docker.image('agung3wi/alpine-rsync:1.1').inside('--entrypoint="" -u root') {
             sshagent(credentials: ['ssh-prod']) {
-                // Gunakan double quotes (""") agar variabel Groovy (${PROD_HOST}) bisa terbaca
                 sh """
-                mkdir -p ~/.ssh
-                chmod 700 ~/.ssh
-                
-                # Gunakan -o StrictHostKeyChecking=no untuk menghindari masalah "Host unreachable" pada ssh-keyscan
-                ssh-keyscan -H ${PROD_HOST} >> ~/.ssh/known_hosts
+                # Hapus cache lama dengan mengabaikan Host Key Checking
+                ssh -o StrictHostKeyChecking=no ${PROD_USER}@${PROD_HOST} "rm -f ${PROD_PATH}/bootstrap/cache/packages.php ${PROD_PATH}/bootstrap/cache/services.php"
 
-                # Hapus cache lama
-                ssh ${PROD_USER}@${PROD_HOST} "rm -f ${PROD_PATH}/bootstrap/cache/packages.php ${PROD_PATH}/bootstrap/cache/services.php"
-
-                # Jalankan rsync
-                rsync -rav --delete ./ \
+                # Jalankan rsync dengan mengabaikan Host Key Checking
+                rsync -rav --delete -e "ssh -o StrictHostKeyChecking=no" ./ \
                     ${PROD_USER}@${PROD_HOST}:${PROD_PATH}/ \
                     --exclude='public/build' \
                     --exclude='node_modules' \
