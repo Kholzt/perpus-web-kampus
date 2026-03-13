@@ -2,7 +2,7 @@ node {
     // Definisikan variabel di level node agar bisa diakses semua stage
     def PROD_HOST = "172.17.240.38"
     def PROD_USER = "kholzt"
-    def PROD_PATH = "/home/newbieflank/prod.kelasdevops.xyz"
+    def PROD_PATH = "/home/kholzt/prod.kelasdevops.xyz"
 
     stage('Checkout') {
         checkout scm
