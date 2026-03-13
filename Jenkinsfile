@@ -8,30 +8,27 @@ node {
     }
 
     stage("Build") {
+        // Tetap gunakan composer
         docker.image('composer:2.6').inside('-u root') {
             sh '''
-            rm -f composer.lock
-            composer install
+            composer install --no-dev --optimize-autoloader
             '''
         }
     }
 
-    stage("Testing") {
-        docker.image('ubuntu').inside('-u root') {
-            sh 'echo "Ini adalah test"'
-        }
-    }
-
     stage("Deploy") {
-        sshagent(['ssh-prod']) {
-            sh """
+        // Gunakan image yang sudah ada rsync & ssh
+        docker.image('instrumentisto/rsync-ssh').inside('-u root') {
+            sshagent(['ssh-prod']) {
+                sh """
                 mkdir -p ~/.ssh
                 chmod 700 ~/.ssh
                 ssh-keyscan -H ${PROD_HOST} >> ~/.ssh/known_hosts
                 
                 rsync -avz --delete ./ ${PROD_USER}@${PROD_HOST}:${PROD_PATH}/ \
                 --exclude=.env --exclude=storage --exclude=.git
-            """
+                """
+            }
         }
     }
 }
