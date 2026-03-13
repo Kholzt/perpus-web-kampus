@@ -36,11 +36,11 @@ node {
                 ssh-keyscan -H $PROD_HOST >> ~/.ssh/known_hosts
 
                 # Hapus cache lama supaya rsync tidak gagal
-                ssh newbieflank@$PROD_HOST "rm -f /home/newbieflank/prod.kelasdevops.xyz/bootstrap/cache/packages.php /home/newbieflank/prod.kelasdevops.xyz/bootstrap/cache/services.php"
+                ssh kholzt@$PROD_HOST "rm -f /home/kholzt/prod.kelasdevops.xyz/bootstrap/cache/packages.php /home/kholzt/prod.kelasdevops.xyz/bootstrap/cache/services.php"
 
                 # Jalankan rsync
                 rsync -rav --delete ./ \
-                    newbieflank@$PROD_HOST:/home/newbieflank/prod.kelasdevops.xyz/ \
+                    kholzt@$PROD_HOST:/home/kholzt/prod.kelasdevops.xyz/ \
                     --exclude='public/build' \
                     --exclude='node_modules' \
                     --exclude='vendor' \
