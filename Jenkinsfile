@@ -1,6 +1,6 @@
 node {
     // Definisikan variabel di level node agar bisa diakses semua stage
-    def PROD_HOST = "172.17.240.38"
+    def PROD_HOST = "172.25.156.241"
     def PROD_USER = "kholzt"
     def PROD_PATH = "/home/kholzt/prod.kelasdevops.xyz"
 
