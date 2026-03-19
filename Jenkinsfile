@@ -6,7 +6,7 @@ node {
 
     stage('Checkout') {
         cleanWs()
-        checkout scm
+        git branch: 'main', url: 'https://github.com/Kholzt/perpus-web-kampus.git'
     }
 
     stage('Build') {
