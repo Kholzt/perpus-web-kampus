@@ -5,6 +5,7 @@ node {
     def PROD_PATH = "/home/kholzt/prod.kelasdevops.xyz"
 
     stage('Checkout') {
+        cleanWs()
         checkout scm
     }
 
