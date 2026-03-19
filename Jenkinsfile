@@ -5,8 +5,7 @@ node {
     def PROD_PATH = "/home/kholzt/prod.kelasdevops.xyz"
 
     stage('Checkout') {
-        cleanWs()
-        git branch: 'main', url: 'https://github.com/Kholzt/perpus-web-kampus.git'
+        checkout scm
     }
 
     stage('Build') {
