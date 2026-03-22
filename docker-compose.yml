@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  app:
+    image: php:8.2-cli
+    container_name: laravel_blog_jenkins
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+    ports:
+      - "8000:8000"
+    command: php artisan serve --host=0.0.0.0 --port=8000
