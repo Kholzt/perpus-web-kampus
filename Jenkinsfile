@@ -39,7 +39,9 @@ node {
                     --exclude='storage' \
                     --exclude='.git' \
                     --exclude='.env'
+                ssh -o StrictHostKeyChecking=no ${PROD_USER}@${PROD_HOST} "cd ${PROD_PATH} && docker-compose up -d"
                 """
+                
             }
         }
     }
