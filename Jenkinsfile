@@ -41,7 +41,13 @@ node {
                     --exclude='.env'
               
                 """
-                
+                sh """
+            ssh -o StrictHostKeyChecking=no ${PROD_USER}@${PROD_HOST} '
+                cd ${PROD_PATH}
+                docker-compose down
+                docker-compose up -d
+            '
+        """
             }
         }
     }
