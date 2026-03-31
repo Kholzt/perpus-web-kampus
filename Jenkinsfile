@@ -46,7 +46,7 @@ node {
              #    cd ${PROD_PATH}
                #  docker-compose down
                 # docker-compose up -d
-            '
+           # '
        #  """
             }
         }
