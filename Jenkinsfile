@@ -28,7 +28,7 @@ node {
             sshagent(credentials: ['ssh-prod']) {
                 sh """
                 # Hapus cache lama dengan mengabaikan Host Key Checking
-                ssh -o StrictHostKeyChecking=no ${PROD_USER}@${PROD_HOST} "rm -f ${PROD_PATH}/bootstrap/cache/packages.php ${PROD_PATH}/bootstrap/cache/services.php"
+                #ssh -o StrictHostKeyChecking=no ${PROD_USER}@${PROD_HOST} "rm -f ${PROD_PATH}/bootstrap/cache/packages.php ${PROD_PATH}/bootstrap/cache/services.php"
 
                 # Jalankan rsync dengan mengabaikan Host Key Checking
                 rsync -rav --delete -e "ssh -o StrictHostKeyChecking=no" ./ \
